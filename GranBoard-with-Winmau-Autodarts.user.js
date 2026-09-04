@@ -1,13 +1,9 @@
 // ==UserScript==
-// @name         GranBoard-with-Autodarts
-// @namespace    https://github.com/Lennart-Jerome/GranBoard-with-Autodarts
-// @version      3.0.25-DIAG-FAST
-// @description  GranBoard → Autodarts connect Granboard to Autodarts over Web Bluetooth
-// @author       Lennart-Jerome
-// @homepageURL  https://github.com/Lennart-Jerome/GranBoard-with-Autodarts
-// @supportURL   https://github.com/Lennart-Jerome/GranBoard-with-Autodarts/issues
-// @updateURL    https://raw.githubusercontent.com/Lennart-Jerome/GranBoard-with-Autodarts/main/GranBoard-with-Autodarts.user.js
-// @downloadURL  https://raw.githubusercontent.com/Lennart-Jerome/GranBoard-with-Autodarts/main/GranBoard-with-Autodarts.user.js
+// @name         Dartunity GranBoard → Autodarts
+// @namespace    dartunity.granboard.autodarts
+// @version      3.1.0
+// @description  GranBoard → Autodarts via Web Bluetooth – angepasst für das neue Autodarts Play UI
+// @author       Dartunity
 // @match        https://play.autodarts.com/*
 // @match        https://*.autodarts.com/*
 // @run-at       document-end
@@ -31,7 +27,7 @@
 
 (function () {
   "use strict";
-  // 3.0.19: reliability update for the Autodarts Play UI introduced 2026-09.
+  // 3.1.0 Stable: reliable GranBoard input for the new Autodarts Play UI.
   // Uses the new Dartboard React pointer handlers while preserving GranBoard BLE,
   // RAW mapping, LED settings, overlay, AutoNext and legacy keypad fallbacks.
 let __lastUndoAt = 0; // timestamp of last UNDO (ms)
@@ -39,7 +35,7 @@ let __lastUndoAt = 0; // timestamp of last UNDO (ms)
   window.__GB_AD_STEP3_V318_INIT__ = true;
 
 
-  // ---------- TEMP DIAGNOSTIC COUNTER ----------
+  // ---------- INTERNAL COMMIT/RETRY STATE ----------
   const GB_DIAG = {
     rx: 0,
     sent: 0,
@@ -55,41 +51,9 @@ let __lastUndoAt = 0; // timestamp of last UNDO (ms)
     lastFail: "-"
   };
 
-  function ensureDiagBox() {
-    let box = document.getElementById("__gb_diag_box__");
-    if (box) return box;
-
-    box = document.createElement("div");
-    box.id = "__gb_diag_box__";
-    box.style.cssText = [
-      "position:fixed","top:10px","right:10px","z-index:2147483647",
-      "background:#111","color:#fff","font:14px/1.35 monospace",
-      "padding:10px 12px","border:2px solid #00d084","border-radius:8px",
-      "box-shadow:0 2px 12px #0008","min-width:250px","white-space:pre"
-    ].join(";");
-
-    box.addEventListener("dblclick", () => {
-      GB_DIAG.rx = GB_DIAG.sent = GB_DIAG.up = GB_DIAG.counted = GB_DIAG.retry = GB_DIAG.fail = 0;
-      GB_DIAG.lastRx = GB_DIAG.lastSent = GB_DIAG.lastUp = GB_DIAG.lastCounted = GB_DIAG.lastRetry = GB_DIAG.lastFail = "-";
-      renderDiag();
-    });
-
-    (document.body || document.documentElement).appendChild(box);
-    return box;
-  }
-
-  function renderDiag() {
-    const box = ensureDiagBox();
-    box.textContent =
-      "🎯 GRANBOARD DIAG 3.0.25\n" +
-      "RX Bluetooth : " + GB_DIAG.rx + "   [" + GB_DIAG.lastRx + "]\n" +
-      "→ Autodarts  : " + GB_DIAG.sent + "   [" + GB_DIAG.lastSent + "]\n" +
-      "PointerUp    : " + GB_DIAG.up + "   [" + GB_DIAG.lastUp + "]\n" +
-      "✓ AD gezählt : " + GB_DIAG.counted + "   [" + GB_DIAG.lastCounted + "]\n" +
-      "↻ Retry      : " + GB_DIAG.retry + "   [" + GB_DIAG.lastRetry + "]\n" +
-      "Fehler       : " + GB_DIAG.fail + "   [" + GB_DIAG.lastFail + "]\n" +
-      "Doppelklick = Zähler löschen";
-  }
+  // Internal reliability counters.
+  // No visible diagnostic overlay in the stable release.
+  function renderDiag() {}
 
   function diagRx(v) {
     GB_DIAG.rx++;
@@ -131,7 +95,6 @@ let __lastUndoAt = 0; // timestamp of last UNDO (ms)
     renderDiag();
   }
 
-  setTimeout(renderDiag, 500);
 
   let __gbAwaitingCommit = null;
   let __gbCommitTimer = null;
@@ -151,7 +114,7 @@ let __lastUndoAt = 0; // timestamp of last UNDO (ms)
     const meaningful = mutations.some(m => {
       const el = m.target?.nodeType === 1 ? m.target : m.target?.parentElement;
       if (!el) return false;
-      if (el.closest?.("#__gb_diag_box__, #__gb_overlay__, #__gb_tab__")) return false;
+      if (el.closest?.("#__gb_overlay__, #__gb_tab__")) return false;
       if (el.closest?.('[role="img"][aria-label="Dartboard"]')) return false;
 
       if (m.type === "characterData") return true;
