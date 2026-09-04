@@ -1,9 +1,13 @@
 // ==UserScript==
 // @name         Dartunity GranBoard → Autodarts
 // @namespace    dartunity.granboard.autodarts
-// @version      3.1.0
+// @version      3.1.1
 // @description  GranBoard → Autodarts via Web Bluetooth – angepasst für das neue Autodarts Play UI
 // @author       Dartunity
+// @homepageURL  https://github.com/Dartunity/GranBoard-with-Winmau-Autodarts
+// @supportURL   https://github.com/Dartunity/GranBoard-with-Winmau-Autodarts/issues
+// @updateURL    https://raw.githubusercontent.com/Dartunity/GranBoard-with-Winmau-Autodarts/main/GranBoard-with-Winmau-Autodarts.user.js
+// @downloadURL  https://raw.githubusercontent.com/Dartunity/GranBoard-with-Winmau-Autodarts/main/GranBoard-with-Winmau-Autodarts.user.js
 // @match        https://play.autodarts.com/*
 // @match        https://*.autodarts.com/*
 // @run-at       document-end
